@@ -1,0 +1,68 @@
+import yaml
+import logging
+import os
+import re
+import time
+import json
+import pickle
+
+
+def get_deepseek_response(system_prompt, query_prompt):
+    for attempt in range(MAX_RETRIES):
+        try:
+            os.environ['HTTP_PROXY'] = HTTP_PROXY
+            os.environ['HTTPS_PROXY'] = HTTPS_PROXY
+            from openai import OpenAI
+            client = OpenAI(api_key="sk-e21d10281c0d4sdc21300cd8c94485033", base_url="https://api.deepseek.com")
+
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": query_prompt}
+                ],
+                temperature=0.0,
+                max_tokens = 2048,
+                top_p=1.0,
+                stream=False
+            )
+            generated_text = response.choices[0].message.content.strip()
+
+            break
+        except Exception as e:
+            print(f"API call attempt {attempt + 1} failed: {e}")
+            if attempt == MAX_RETRIES-1:
+                raise
+            time.sleep(1)  # 重试前等待
+
+    return generated_text
+
+def get_gpt_response(system_prompt, query_prompt):
+    for attempt in range(MAX_RETRIES):
+        try:
+            os.environ['HTTP_PROXY'] = HTTP_PROXY
+            os.environ['HTTPS_PROXY'] = HTTPS_PROXY
+            import openai  
+            openai.api_key = OPENAI_API_KEY
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": query_prompt}
+                ],
+                temperature=0.0,
+                max_tokens = 2048,
+                top_p=1.0,
+            )
+            generated_text = response.choices[0].message['content'].strip()
+
+            break
+        except Exception as e:
+            print(f"API call attempt {attempt + 1} failed: {e}")
+            if attempt == MAX_RETRIES-1:
+                raise
+            time.sleep(1)  # 重试前等待
+
+    return generated_text
+
